@@ -1,7 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { notFound } from "next/navigation";
 
-
 import { addToCart } from "@/api/cart";
 import { addReview, getProductById, getProducts } from "@/api/products";
 import ProductDetailScene from "@/app/scene/ProductDetail";
@@ -12,13 +11,21 @@ export default async function ProductDetail({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const product = await getProductById(+id);
-  const products = await getProducts();
 
+  const getProductByIdAction = async (id: number) => {
+    "use server";
+    const product = await getProductById(id);
+    if (!product) {
+      notFound();
+    }
+    return product;
+  };
 
-  if (!product) {
-    notFound();
-  }
+  const getProductsAction = async () => {
+    "use server";
+    const products = await getProducts();
+    return products || [];
+  };
 
   const addToCartAction = async () => {
     "use server";
@@ -34,6 +41,12 @@ export default async function ProductDetail({
   };
 
   return (
-    <ProductDetailScene product={product} id={+id} products={products} addToCartAction={addToCartAction} addReviewAction={addReviewAction} />
+    <ProductDetailScene
+      id={+id}
+      addToCartAction={addToCartAction}
+      addReviewAction={addReviewAction}
+      getProductByIdAction={getProductByIdAction}
+      getProductsAction={getProductsAction}
+    />
   );
 }
