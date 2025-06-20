@@ -8,18 +8,34 @@ import ProductCard from "../components/ProductCard";
 import AverageRating from "../products/[id]/components/AverageRating";
 import Reviews from "../products/[id]/components/Reviews";
 
-export default function ProductDetailScene(
-  { product, id, products, addToCartAction, addReviewAction }:
-    { product: Product, id: number, products: Product[], addToCartAction: () => Promise<Cart>, addReviewAction: (text: string, rating: number) => Promise<Review[]> }) {
+export default function ProductDetailScene({
+  id,
+  addToCartAction,
+  addReviewAction,
+  getProductByIdAction,
+  getProductsAction,
+}: {
+  id: number;
+  addToCartAction: () => Promise<Cart>;
+  addReviewAction: (text: string, rating: number) => Promise<Review[]>;
+  getProductByIdAction: (id: number) => Promise<Product | undefined>;
+  getProductsAction: () => Promise<Product[]>;
+}) {
   const [productData, setProductData] = useState<Product | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+
   useEffect(() => {
     const fetchProduct = async () => {
-      if (product) {
-        setProductData(product);
-      }
+      const response = await getProductByIdAction(id);
+      setProductData(response || null);
+    };
+    const fetchProducts = async () => {
+      const products = await getProductsAction();
+      setProducts(products);
     };
     fetchProduct();
-  }, [product]);
+    fetchProducts();
+  }, [id]);
 
   if (!productData) {
     return <div>Loading...</div>;
@@ -55,7 +71,10 @@ export default function ProductDetailScene(
         </div>
       </div>
       <div className="w-full">
-        <Reviews reviews={productData.reviews} addReviewAction={addReviewAction} />
+        <Reviews
+          reviews={productData.reviews}
+          addReviewAction={addReviewAction}
+        />
       </div>
       <div className="flex flex-wrap gap-2 w-full">
         <h1 className="text-2xl font-bold mt-2 -mb-2">Related Products</h1>
